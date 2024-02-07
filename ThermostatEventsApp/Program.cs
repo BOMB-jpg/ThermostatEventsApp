@@ -52,13 +52,13 @@ namespace ThermostatEventsApp
 
         }
     }
-
+//创建一个恒温器
     public class Thermostat : IThermostat
     {
         private ICoolingMechanism _coolingMechanism = null;
         private IHeatSensor _heatSensor = null;
         private IDevice _device = null;
-
+//构造函数
         public Thermostat(IDevice device, IHeatSensor heatSensor, ICoolingMechanism coolingMechanism)
         {
             _device = device;
@@ -73,7 +73,7 @@ namespace ThermostatEventsApp
             _heatSensor.TemperatureFallsBelowWarningLevelEventHandler += HeatSensor_TemperatureFallsBelowWarningLevelEventHandler;
             _heatSensor.TemperatureReachesEmergencyLevelEventHandler += HeatSensor_TemperatureReachesEmergencyLevelEventHandler;
         }
-
+//应对三种情况
         private void HeatSensor_TemperatureReachesEmergencyLevelEventHandler(object sender, TemperatureEventArgs e)
         {
             Console.ForegroundColor = ConsoleColor.Red;
@@ -110,7 +110,7 @@ namespace ThermostatEventsApp
         }
     }
 
-    public interface IThermostat
+    public interface IThermostat  //恒温器 
     {
         
         void RunThermostat();
@@ -153,10 +153,10 @@ namespace ThermostatEventsApp
         double _emergencyLevel = 0;
 
         bool _hasReachedWarningTemperature = false;
-
+    //EventHandlerList 是管理事务处理程序的类
         protected EventHandlerList _listEventDelegates = new EventHandlerList();
 
-        static readonly object _temperatureReachesWarningLevelKey = new object();
+        static readonly object _temperatureReachesWarningLevelKey = new object();// new object 事件event key
         static readonly object _temperatureFallsBelowWarningLevelKey = new object();
         static readonly object _temperatureReachesEmergencyLevelKey = new object();
 
@@ -169,7 +169,7 @@ namespace ThermostatEventsApp
 
             SeedData();
         }
-
+//监控温度的变化
         private void MonitorTemperature()
         {
             foreach (double temperature in _temperatureData)
@@ -202,7 +202,7 @@ namespace ThermostatEventsApp
                 else if (temperature < _warningLevel && _hasReachedWarningTemperature)
                 {
                     _hasReachedWarningTemperature = false;
-
+   //对象初始化
                     TemperatureEventArgs e = new TemperatureEventArgs
                     {
                         Temperature = temperature,
@@ -216,7 +216,7 @@ namespace ThermostatEventsApp
             }
         
         }
-
+   //静态生成温度嘛
         private void SeedData()
         {
             _temperatureData = new double[] {16,17,16.5,18,19,22,24,26.75,28.7,27.6,26,24,22,45,68,86.45 };
@@ -224,7 +224,11 @@ namespace ThermostatEventsApp
 
         protected void OnTemperatureReachesWarningLevel(TemperatureEventArgs e)
         {
+        //listEventDelegates 事件委托列表 不仅包含一个事件用数组的方式来表达
             EventHandler<TemperatureEventArgs> handler = (EventHandler<TemperatureEventArgs>)_listEventDelegates[_temperatureReachesWarningLevelKey];
+        // 这里进行了一个强制转换 因为事件处理程序是以委托的形式存在的 而在该例子中 事件类型都是EventHandler<TemperatureEventArgs>
+        //所以需要强制类型转化  生成handler  如果不存在handler 就不行了但如果存在就使用this，e 来生成作用 
+
 
             if (handler != null)
             {
@@ -242,6 +246,7 @@ namespace ThermostatEventsApp
             }
 
         }
+       //事件源 
         protected void OnTemperatureReachesEmergencyLevel(TemperatureEventArgs e)
         {
             EventHandler<TemperatureEventArgs> handler = (EventHandler<TemperatureEventArgs>)_listEventDelegates[_temperatureReachesEmergencyLevelKey];
@@ -252,7 +257,7 @@ namespace ThermostatEventsApp
             }
 
         }
-
+// 事件的声明
         event EventHandler<TemperatureEventArgs> IHeatSensor.TemperatureReachesEmergencyLevelEventHandler
         {
             add
@@ -300,10 +305,12 @@ namespace ThermostatEventsApp
     }
 
     public interface IHeatSensor
-    {
-        event EventHandler<TemperatureEventArgs> TemperatureReachesEmergencyLevelEventHandler;
-        event EventHandler<TemperatureEventArgs> TemperatureReachesWarningLevelEventHandler; 
-        event EventHandler<TemperatureEventArgs> TemperatureFallsBelowWarningLevelEventHandler;
+    { 
+        //事件泛型类型的声明  还有一种就是eventHandler  事件处理程序
+         // 并且事件类型是 EventHandler<T>，其中 T 是事件参数类型 TemperatureEventArgs。
+        event EventHandler<TemperatureEventArgs> TemperatureReachesEmergencyLevelEventHandler; //到达紧急水平
+        event EventHandler<TemperatureEventArgs> TemperatureReachesWarningLevelEventHandler;  //到达警告水平
+        event EventHandler<TemperatureEventArgs> TemperatureFallsBelowWarningLevelEventHandler; //当温度低于警告水平时进行报警
 
         void RunHeatSensor();
     }
